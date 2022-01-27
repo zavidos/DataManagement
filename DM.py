@@ -1,11 +1,10 @@
-import sys, requests, bs4, os, time, shelve, shutil, datetime, smtplib, ssl, selenium,pprint
+import sys, requests, bs4, os, time, shelve, shutil, datetime, json, selenium,pprint
 import logging
 import pandas as pd
 from selenium import webdriver
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
-logging.disable(logging.DEBUG)
+logging.disable(logging.INFO)
 
-diz_dblp={}
 def scaricapagina(indirizzo):
     url = indirizzo
     user_agent = 'Mozilla/5.0'
@@ -22,7 +21,7 @@ def lavorapagina(scaricata,nome,cognome):
     for ris in risultati_li:
         try:
             numero_omonimo=ris.a.span.next_sibling.next_sibling.text
-            diz_dblp[nome+cognome+numero_omonimo]=ris.a.get('href')
+            diz_dblp[nome+cognome+numero_omonimo]={'name':nome,'surname':cognome,'link':ris.a.get('href')}
         except:
             pass
 
@@ -32,9 +31,7 @@ def dati_auth(pub):
     authors = []
     title = 'nothing'
     where = 'nothing'
-
     if 'year' in pub.get('class'):
-        # year is not always scrapable, except for this case. Might be done more elegantly
         return int(pub.contents[0])
     else:
         ptype = pub.attrs.get('class')[1]
@@ -50,21 +47,13 @@ def dati_auth(pub):
                         where = found_where.text
             elif 'publ' in class_of_content_item:
                 link = content_item.contents[0].find('a').attrs.get('href', "nothing")
+    return {'Type': ptype, 'Link': link, 'Authors': authors, 'Title': title, 'Where': where}
 
-    return {'Type': ptype,
-            'Link': link,
-            'Authors': authors,
-            'Title': title,
-            'Where': where}
-art=[]
 def salva_articoli(pagautore):
     pag_autore=scaricapagina(pagautore)
     zuppa_aut=bs4.BeautifulSoup(pag_autore.text, 'lxml')
-    """risultati_title=zuppa_aut.find_all("span", attrs={"class":"title"})
-    for title in risultati_title:
-        print(title.text)"""
     risultati_pub=zuppa_aut.find("ul", attrs={"class": "publ-list"})
-    pub_list_data = []
+    pub_lista = []
     curr_year = 0
     for figlio in risultati_pub.children:
         pub_data = dati_auth(figlio)
@@ -72,19 +61,21 @@ def salva_articoli(pagautore):
             curr_year = pub_data
         else:
             pub_data['Year'] = curr_year
-            pub_list_data.append(pub_data)
-    return pub_list_data
-listanomi=[['wei','wang'],['yichen','wang']]
+            pub_lista.append(pub_data)
+    return pub_lista
+
+diz_dblp={}
+diz_tot={}
+listanomi=[['yichen','wang'],['wei','wang']]
 
 for i in listanomi:
     indirizzo='https://dblp.org/search/author?q='+i[0]+'+'+i[1]
     scaricata=scaricapagina(indirizzo)
     lavorapagina(scaricata,i[0],i[1])
 
-art=salva_articoli("https://dblp.org/pid/74/8792-1.html")
 #pprint.pprint(diz_dblp)
-#for i,j in diz_dblp.items():
-    #print(i,j)
-    #salva_articoli(j)
+for i,j in diz_dblp.items():
+    diz_tot[i]=dict(Name=j['name'],Surname=j['surname'],Publications=salva_articoli(j['link']))
 
-art
+with open("DM.json", "w") as outfile:
+    json.dump(diz_tot, outfile, indent=2)
