@@ -68,19 +68,32 @@ def salva_articoli(pagautore):
     return pub_lista
 
 diz_dblp={}
-diz_tot={}
-listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo'],['wei','chen'],['feng','liu']]
+
+
+cognomi = ["Wang", "Li", "Chang", "Liu", "Chen", "Yang", "Huang", "Chao", "Wu", "Chou", "Hsu", "Sun", "Ma", "Chu", "Hu", "Kuo", "He", "Ho", "Lin", "Kao", "Zhang"]
+nomi = ["Yichen", "Yuxuan", "Haoyu", "Yuchen", "Zimo", "Yuhang", "Haoran", "Zihao", "Wei", "Qiang", "Wang", "Yan", "Nushi", "Wei", "Yan", "Hui", "Ying", "Zihan", "Xinyi", "Yinuo"]
+listanomi = []
+for cognome in cognomi:
+    for nome in nomi:
+        final = [nome,cognome]
+        listanomi.append(final)
+listanomi=listanomi[0:15]
+print(listanomi)
+
+#listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo'],['wei','chen'],['feng','liu']]
 lista_tot=[]
 listathr=[]
 for i in listanomi:
-    indirizzo='https://dblp.org/search/author?q='+i[0]+'+'+i[1]
-    scaricata=scaricapagina(indirizzo)
-    lavorapagina(scaricata,i[0],i[1])
+    try:
+        indirizzo='https://dblp.org/search/author?q='+i[0]+'+'+i[1]
+        scaricata=scaricapagina(indirizzo)
+        lavorapagina(scaricata,i[0],i[1])
+    except:
+        print(i[0],i[1],"non ha omonimi")
 
 def thr(i):
     lista_tot.append(dict(_id=i,Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link'])))
 
-#pprint.pprint(diz_dblp)
 for i in diz_dblp:
     threadObject=Thread(target=thr,args=[i])
     listathr.append(threadObject)
