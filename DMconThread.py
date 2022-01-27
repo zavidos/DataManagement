@@ -2,6 +2,7 @@ import sys, requests, bs4, os, time, shelve, shutil, datetime, json, selenium,pp
 import logging
 import pandas as pd
 from selenium import webdriver
+from threading import Thread
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
 logging.disable(logging.INFO)
 
@@ -75,12 +76,19 @@ for i in listanomi:
     scaricata=scaricapagina(indirizzo)
     lavorapagina(scaricata,i[0],i[1])
 
+def diz_thr(i):
+    diz_tot[i]=dict(Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link']))
+    with open(i+"DM.json", "w") as outfile:
+        json.dump(diz_tot, outfile, indent=2)
 #pprint.pprint(diz_dblp)
-for i,j in diz_dblp.items():
-    diz_tot[i]=dict(Name=j['name'],Surname=j['surname'],Publications=salva_articoli(j['link']))
+for i in diz_dblp:
+    #print(diz_dblp[i])
+    threadObject=Thread(target=diz_thr,args=[i])
+    threadObject.start()
+    #diz_tot[i]=dict(Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link']))
 
-with open("DM.json", "w") as outfile:
+with open("DMt.json", "w") as outfile:
     json.dump(diz_tot, outfile, indent=2)
 
 end = time.time()
-print(f'It took {round(end - start,1)} seconds for {len(diz_tot)} records for a total of {round((end - start)/len(diz_tot),3)} sec per record')
+#print(f'It took {round(end - start,1)} seconds for {len(diz_tot)} records for a total of {round((end - start)/len(diz_tot),3)} sec per record')
