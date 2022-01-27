@@ -68,7 +68,8 @@ def salva_articoli(pagautore):
 
 diz_dblp={}
 diz_tot={}
-listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo']]
+lista_tot=[]
+listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo'],['wei','chen'],['feng','liu']]
 
 for i in listanomi:
     indirizzo='https://dblp.org/search/author?q='+i[0]+'+'+i[1]
@@ -77,10 +78,14 @@ for i in listanomi:
 
 #pprint.pprint(diz_dblp)
 for i,j in diz_dblp.items():
-    diz_tot[i]=dict(Name=j['name'],Surname=j['surname'],Publications=salva_articoli(j['link']))
+    lista_tot.append(dict(_id=i,Name=j['name'],Surname=j['surname'],Publications=salva_articoli(j['link'])))
+    #diz_tot[i]=dict(Name=j['name'],Surname=j['surname'],Publications=salva_articoli(j['link']))
 
-with open("DM.json", "w") as outfile:
-    json.dump(diz_tot, outfile, indent=2)
+"""with open("DM.json", "w") as outfile:
+    json.dump(diz_tot, outfile, indent=2)"""
+
+with open('data.json', 'w', encoding='utf-8') as f:
+  f.write(json.dumps(lista_tot, ensure_ascii=False, indent=2))
 
 end = time.time()
-print(f'It took {round(end - start,1)} seconds for {len(diz_tot)} records for a total of {round((end - start)/len(diz_tot),3)} sec per record')
+print(f'It took {round(end - start,1)} seconds for {len(lista_tot)} records for a total of {round((end - start)/len(lista_tot),3)} sec per record')

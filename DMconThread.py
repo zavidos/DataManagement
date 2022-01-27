@@ -69,26 +69,30 @@ def salva_articoli(pagautore):
 
 diz_dblp={}
 diz_tot={}
-listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo']]
-
+listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo'],['wei','chen'],['feng','liu']]
+lista_tot=[]
+listathr=[]
 for i in listanomi:
     indirizzo='https://dblp.org/search/author?q='+i[0]+'+'+i[1]
     scaricata=scaricapagina(indirizzo)
     lavorapagina(scaricata,i[0],i[1])
 
-def diz_thr(i):
-    diz_tot[i]=dict(Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link']))
-    with open(i+"DM.json", "w") as outfile:
-        json.dump(diz_tot, outfile, indent=2)
+def thr(i):
+    lista_tot.append(dict(_id=i,Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link'])))
+
 #pprint.pprint(diz_dblp)
 for i in diz_dblp:
-    #print(diz_dblp[i])
-    threadObject=Thread(target=diz_thr,args=[i])
-    threadObject.start()
-    #diz_tot[i]=dict(Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link']))
+    threadObject=Thread(target=thr,args=[i])
+    listathr.append(threadObject)
 
-with open("DMt.json", "w") as outfile:
-    json.dump(diz_tot, outfile, indent=2)
+for x in listathr:
+    x.start()
+
+for x in listathr:
+    x.join()
+
+with open('datathr.json', 'w', encoding='utf-8') as f:
+  f.write(json.dumps(lista_tot, ensure_ascii=False, indent=2))
 
 end = time.time()
-#print(f'It took {round(end - start,1)} seconds for {len(diz_tot)} records for a total of {round((end - start)/len(diz_tot),3)} sec per record')
+print(f'It took {round(end - start,1)} seconds for {len(lista_tot)} records for a total of {round((end - start)/len(lista_tot),3)} sec per record')
