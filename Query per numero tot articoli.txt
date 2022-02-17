@@ -1,0 +1,6 @@
+db.getCollection('dblp').aggregate([{$project: { Pubnumber: { $size:"$Publications" }}},{
+    $group: {
+       _id: null,
+       numeroTotArticoli: { $sum:"$Pubnumber" }
+    }
+  }])

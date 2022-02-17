@@ -1,8 +1,9 @@
-import sys, requests, bs4, os, time, shelve, shutil, datetime, json, selenium,pprint
+import sys, requests, bs4, os, time, shelve, shutil, datetime, json, selenium,pprint,math
 import logging
 import pandas as pd
 from selenium import webdriver
 from threading import Thread
+from pymongo import MongoClient
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
 logging.disable(logging.INFO)
 
@@ -55,32 +56,36 @@ def dati_auth(pub):
 def salva_articoli(pagautore):
     pag_autore=scaricapagina(pagautore)
     zuppa_aut=bs4.BeautifulSoup(pag_autore.text, 'lxml')
-    risultati_pub=zuppa_aut.find("ul", attrs={"class": "publ-list"})
+    risultati_pub=zuppa_aut.findAll("ul", attrs={"class": "publ-list"})
     pub_lista = []
     curr_year = 0
-    for figlio in risultati_pub.children:
-        pub_data = dati_auth(figlio)
-        if type(pub_data) == int:
-            curr_year = pub_data
-        else:
-            pub_data['Year'] = curr_year
-            pub_lista.append(pub_data)
+    for ri in risultati_pub:
+        for figlio in ri.children:
+            pub_data = dati_auth(figlio)
+            if type(pub_data) == int:
+                curr_year = pub_data
+            else:
+                pub_data['Year'] = curr_year
+                pub_lista.append(pub_data)
     return pub_lista
 
 diz_dblp={}
+cognomi = ['Cao', 'Cui', 'Yang', 'Feng', 'Yao', 'Chen', 'Gao', 'Yu', 'Hsu', 'Ho', 'Ma', 'Zhu', 'He', 'Zhao', 'Liang', 'Zeng', 'Ding', 'Chu', 'Wu', 'Kao', 'Zhou', 'Zheng', 'Han', 'Tian', 'Wei', 'Xie', 'Shen', 'Chao', 'Xu', 'Liu', 'Chou', 'Zhang', 'Du', 'Lin', 'Chang', 'Dong', 'Li', 'Ren', 'Deng', 'Guo', 'Hu', 'Cheng', 'Tang', 'Wang', 'Cai', 'Jiang', 'Pan', 'Yuan', 'Kuo', 'Zhong', 'Song', 'Peng', 'Fan', 'Lu', 'Ye', 'Tan', 'Su', 'Sun', 'Luo', 'Huang', 'Xiao']
+nomi = ['Jun', 'Zimo', 'Gang', 'Yang', 'Jie', 'Xiuying', 'Lei', 'Xinyi', 'Yan', 'Chao', 'Wei', 'Xia', 'Jing', 'Ping', 'Haoyu', 'Yong', 'Zihao', 'Ying', 'Min', 'Yichen', 'Yinuo', 'Na', 'Li', 'Xiulan', 'Wang', 'Yuhang', 'Zihan', 'Haoran', 'Hui', 'Tao', 'Fang', 'Guiying', 'Yuchen', 'Juan', 'Ming', 'Nushi', 'Yuxuan', 'Qiang']
 
-
-cognomi = ["Wang", "Li", "Chang", "Liu", "Chen", "Yang", "Huang", "Chao", "Wu", "Chou", "Hsu", "Sun", "Ma", "Chu", "Hu", "Kuo", "He", "Ho", "Lin", "Kao", "Zhang"]
-nomi = ["Yichen", "Yuxuan", "Haoyu", "Yuchen", "Zimo", "Yuhang", "Haoran", "Zihao", "Wei", "Qiang", "Wang", "Yan", "Nushi", "Wei", "Yan", "Hui", "Ying", "Zihan", "Xinyi", "Yinuo"]
 listanomi = []
 for cognome in cognomi:
     for nome in nomi:
         final = [nome,cognome]
         listanomi.append(final)
-listanomi=listanomi[0:15]
+print(f'lunghezza della lista nomi = {len(listanomi)}')
+#listanomi=listanomi[:4]
 print(listanomi)
 
-#listanomi=[['yichen','wang'],['ju','zhang'],['lei','guo'],['wei','chen'],['feng','liu']]
+client = MongoClient('localhost', 27017)
+db = client['DM']
+coll=db.dblptutti
+listaNoOmonimi=[]
 lista_tot=[]
 listathr=[]
 for i in listanomi:
@@ -88,8 +93,11 @@ for i in listanomi:
         indirizzo='https://dblp.org/search/author?q='+i[0]+'+'+i[1]
         scaricata=scaricapagina(indirizzo)
         lavorapagina(scaricata,i[0],i[1])
-    except:
+    except Exception as e:
+        print(e)
         print(i[0],i[1],"non ha omonimi")
+        listaNoOmonimi.append({"Nome":i[0],"Cognome":i[1]})
+    time.sleep(1)
 
 def thr(i):
     lista_tot.append(dict(_id=i,Name=diz_dblp[i]['name'],Surname=diz_dblp[i]['surname'],Publications=salva_articoli(diz_dblp[i]['link'])))
@@ -97,15 +105,35 @@ def thr(i):
 for i in diz_dblp:
     threadObject=Thread(target=thr,args=[i])
     listathr.append(threadObject)
+print("listathr è lunga:",len(listathr))
+listasplit=[listathr[10*i:10*i+10] for i in range(0,math.ceil(len(listathr)/10))]
 
-for x in listathr:
+
+"""for x in listathr:
     x.start()
 
 for x in listathr:
     x.join()
 
-with open('datathr.json', 'w', encoding='utf-8') as f:
-  f.write(json.dumps(lista_tot, ensure_ascii=False, indent=2))
+coll.insert_many(lista_tot)"""
 
+for l in listasplit:
+    lista_tot=[]
+    for x in l:
+        x.start()
+    for x in l:
+        x.join()
+    if lista_tot:
+        coll.insert_many(lista_tot)
+    else:
+        print(l)
+    time.sleep(8)
+
+"""
+with open('datathr2.json', 'w', encoding='utf-8') as f:
+  f.write(json.dumps(lista_tot, ensure_ascii=False, indent=2))"""
+
+db.noomo.insert_one({"noOmonimi":listaNoOmonimi})
 end = time.time()
-print(f'It took {round(end - start,1)} seconds for {len(lista_tot)} records for a total of {round((end - start)/len(lista_tot),3)} sec per record')
+#print(f'It took {round(end - start,1)} seconds')
+print(f'It took {round(end - start,1)} seconds for {len(listathr)} records for a total of {round((end - start)/len(listathr),3)} sec per record')
