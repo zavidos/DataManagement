@@ -9,6 +9,7 @@ logging.disable(logging.INFO)
 
 start = time.time()
 
+# Download and return webpage from URL
 def scaricapagina(indirizzo):
     url = indirizzo
     user_agent = 'Mozilla/5.0'
@@ -18,6 +19,7 @@ def scaricapagina(indirizzo):
     logging.info(scaricata.status_code)
     return scaricata
 
+# Parse webpage with BeautifulSoup and search for people, the use of [0] in result return only the part of DBLP where exact name matches are
 def lavorapagina(scaricata,nome,cognome):
     zuppa = bs4.BeautifulSoup(scaricata.text, 'lxml')
     risultati_ul = zuppa.find_all("ul", attrs={"class":"result-list"})[0]
@@ -29,6 +31,7 @@ def lavorapagina(scaricata,nome,cognome):
         except:
             pass
 
+#Save articles information, if Year is encoutered update year, else parse article type, link, authors list, title and location
 def dati_auth(pub):
     ptype = 'nothing'
     link = 'nothing'
@@ -53,6 +56,7 @@ def dati_auth(pub):
                 link = content_item.contents[0].find('a').attrs.get('href', "nothing")
     return {'Type': ptype, 'Link': link, 'Authors': authors, 'Title': title, 'Where': where}
 
+#for each author download articles info cycling for article section in DBLP (divided by year) and then cycling through articles and running dati_auth function
 def salva_articoli(pagautore):
     pag_autore=scaricapagina(pagautore)
     zuppa_aut=bs4.BeautifulSoup(pag_autore.text, 'lxml')
@@ -82,9 +86,12 @@ print(f'lunghezza della lista nomi = {len(listanomi)}')
 #listanomi=listanomi[:4]
 print(listanomi)
 
+#connection to local MongoDB server
 client = MongoClient('localhost', 27017)
 db = client['DM']
 coll=db.dblptutti
+
+
 listaNoOmonimi=[]
 lista_tot=[]
 listathr=[]
@@ -133,6 +140,7 @@ for l in listasplit:
 with open('datathr2.json', 'w', encoding='utf-8') as f:
   f.write(json.dumps(lista_tot, ensure_ascii=False, indent=2))"""
 
+#Save list of author with no homonyms 
 db.noomo.insert_one({"noOmonimi":listaNoOmonimi})
 end = time.time()
 #print(f'It took {round(end - start,1)} seconds')
