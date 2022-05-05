@@ -75,8 +75,8 @@ def salva_articoli(pagautore):
 
 diz_dblp={}
 cognomi = ['Cao', 'Cui', 'Yang', 'Feng', 'Yao', 'Chen', 'Gao', 'Yu', 'Hsu', 'Ho', 'Ma', 'Zhu', 'He', 'Zhao', 'Liang', 'Zeng', 'Ding', 'Chu', 'Wu', 'Kao', 'Zhou', 'Zheng', 'Han', 'Tian', 'Wei', 'Xie', 'Shen', 'Chao', 'Xu', 'Liu', 'Chou', 'Zhang', 'Du', 'Lin', 'Chang', 'Dong', 'Li', 'Ren', 'Deng', 'Guo', 'Hu', 'Cheng', 'Tang', 'Wang', 'Cai', 'Jiang', 'Pan', 'Yuan', 'Kuo', 'Zhong', 'Song', 'Peng', 'Fan', 'Lu', 'Ye', 'Tan', 'Su', 'Sun', 'Luo', 'Huang', 'Xiao']
-nomi = ['Jun', 'Zimo', 'Gang', 'Yang', 'Jie', 'Xiuying', 'Lei', 'Xinyi', 'Yan', 'Chao', 'Wei', 'Xia', 'Jing', 'Ping', 'Haoyu', 'Yong', 'Zihao', 'Ying', 'Min', 'Yichen', 'Yinuo', 'Na', 'Li', 'Xiulan', 'Wang', 'Yuhang', 'Zihan', 'Haoran', 'Hui', 'Tao', 'Fang', 'Guiying', 'Yuchen', 'Juan', 'Ming', 'Nushi', 'Yuxuan', 'Qiang']
-
+nomi = ['Jun', 'Zimo', 'Gang', 'Yang', 'Jie', 'Xiuying', 'Lei', 'Xinyi', 'Yan', 'Chao', 'Wei', 'Xia', 'Jing', 'Ping', 'Haoyu', 'Yong', 'Zihao', 'Ying', 'Min', 'Yichen', 'Yinuo', 'Na', 'Li', 'Xiulan', 'Wang', 'Yuhang', 'Zihan', 'Haoran', 'Hui', 'Tao', 'Fang', 'Guiying', 'Yuchen', 'Juan', 'Ming', 'Nushi', 'Yuxuan', 'Qiang', 'Xiao', 'Dalai', 'Shaoran', 'Shui', 'Yun', 'Mei', 'Yuga', 'Maylin', 'Kumiko', 'Hua', 'Huan', 'Jiao', 'Ju', 'Lan', 'Lian', 'Chan', 'Hong', 'Ni', 'Qing', 'Shu', 'Shan', 'Qiong', 'Ting', 'Wen']
+#nomiOld = ['Jun', 'Zimo', 'Gang', 'Yang', 'Jie', 'Xiuying', 'Lei', 'Xinyi', 'Yan', 'Chao', 'Wei', 'Xia', 'Jing', 'Ping', 'Haoyu', 'Yong', 'Zihao', 'Ying', 'Min', 'Yichen', 'Yinuo', 'Na', 'Li', 'Xiulan', 'Wang', 'Yuhang', 'Zihan', 'Haoran', 'Hui', 'Tao', 'Fang', 'Guiying', 'Yuchen', 'Juan', 'Ming', 'Nushi', 'Yuxuan', 'Qiang']
 listanomi = []
 for cognome in cognomi:
     for nome in nomi:
@@ -89,7 +89,7 @@ print(listanomi)
 #connection to local MongoDB server
 client = MongoClient('localhost', 27017)
 db = client['DM']
-coll=db.dblptutti
+coll=db.dblptuttiApr
 
 
 listaNoOmonimi=[]
@@ -140,8 +140,8 @@ for l in listasplit:
 with open('datathr2.json', 'w', encoding='utf-8') as f:
   f.write(json.dumps(lista_tot, ensure_ascii=False, indent=2))"""
 
-#Save list of author with no homonyms 
-db.noomo.insert_one({"noOmonimi":listaNoOmonimi})
+#Save list of author with no homonyms
+db.noomoApr.insert_one({"noOmonimi":listaNoOmonimi})
 end = time.time()
 #print(f'It took {round(end - start,1)} seconds')
 print(f'It took {round(end - start,1)} seconds for {len(listathr)} records for a total of {round((end - start)/len(listathr),3)} sec per record')
